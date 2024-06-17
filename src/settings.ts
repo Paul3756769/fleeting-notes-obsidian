@@ -4,11 +4,14 @@ import {
   PluginSettingTab,
   Setting,
   TextAreaComponent,
+  getFrontMatterInfo,
+  FrontMatterInfo
 } from "obsidian";
 import FleetingNotesPlugin from "./main";
 import { openInputModal } from "utils";
 import SupabaseSync from "supabase_sync";
-import grayMatter from "gray-matter";
+const yaml = require("js-yaml");
+
 export interface FleetingNotesSettings {
   auto_generate_title: boolean;
   fleeting_notes_folder: string;
@@ -71,21 +74,32 @@ export class FleetingNotesSettingsTab extends PluginSettingTab {
     this.plugin = plugin;
   }
 
-  processFrontmatter(val: string) {
-    let error = "";
-    let parsedNote;
-    if (!val) {
-      error = "Note template cannot be empty";
-    }
-    try {
-      parsedNote = grayMatter(val);
-      if (!parsedNote?.data?.id) {
-        error = "Note template 'id' field is required";
+  processFrontmatter(val : string)
+  {
+      if(!val)
+      {
+        return "Note template cannot be empty";
       }
-    } catch (_e) {
-      error = "Note template incorrect format";
-    }
-    return error;
+      // try to read frontmatter with FrontMatterInfo
+      const fm_info:FrontMatterInfo = getFrontMatterInfo(val);
+      if(!fm_info.exists)
+      {
+        return "Frontmatter is not recognized";
+      }
+      // try to parse frontmatter string with js-yaml
+      const fm:string = fm_info.frontmatter;
+      try
+      {
+        const yaml_object = yaml.load(fm);
+        const exists_id :boolean = yaml_object?.id;
+        if(!exists_id)
+           return "id property must be defined";
+      }
+      catch(_e)
+      {
+        return "Frontmatter has incorrect format";
+      }
+      return "";
   }
 
   async manageAccount(accountSetting: any, btn: any) {
