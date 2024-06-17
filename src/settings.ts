@@ -5,7 +5,7 @@ import {
   Setting,
   TextAreaComponent,
   getFrontMatterInfo,
-  FrontMatterInfo
+  FrontMatterInfo,
 } from "obsidian";
 import FleetingNotesPlugin from "./main";
 import { openInputModal } from "utils";
